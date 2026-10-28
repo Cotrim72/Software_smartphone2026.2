@@ -20,9 +20,18 @@ Future fazerCadastro(String email, String nome, String senha) async {
     request.headers.set('Content-Type', 'application/json');
     
     request.write(jsonBody);
-    
+
     final response = await request.close();
-    await response.drain(); 
+    final responseBody = await response.transform(utf8.decoder).join();
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+        stderr.writeln('Cadastro realizado com sucesso!');
+    } else if (response.statusCode == 400 && responseBody.contains('já está em uso')) {
+        stderr.writeln('Aviso: O e-mail já está em uso. Prosseguindo para o login...');
+    } else {
+      stderr.writeln('Erro no cadastro: ${response.statusCode} - $responseBody');
+      exit(1);
+    }
   } catch (e) {
     print('Ocorreu um erro: ${e.toString()}');
   } finally {
